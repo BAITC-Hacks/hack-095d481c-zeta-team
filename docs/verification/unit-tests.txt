@@ -1,0 +1,51 @@
+
+> procureflow@0.2.0 test
+> node tests/engine.test.cjs && node tests/project.test.cjs && node tests/desktop.test.cjs
+
+PASS Nonnegative, finite, rounded purchase quantities
+PASS Incoming shipment reduces regular order
+PASS Lead time increases demand
+PASS Higher stock reduces order
+PASS Growth input affects output
+PASS MOQ and pack size are separate
+PASS Zero need never triggers minimum order
+PASS Unknown stock is not silently zero
+PASS Exact stockout increases compensated demand
+PASS Category multiplier affects output
+PASS Seasonality input affects forecast
+PASS Late and overdue shipments are not blindly subtracted
+PASS A one-off monthly spike is suppressed
+PASS Excel report formats are recognized by headers
+
+14 tests passed.
+PASS Versioned project roundtrip retains complete data
+PASS Same inputs give the same procurement orders after restore
+PASS Manual quantities and approval state survive roundtrip
+PASS Approval state is reset across engine versions
+PASS Invalid file format is rejected
+PASS Broken JSON is rejected
+PASS Prototype injection is rejected
+PASS Invalid time horizon is rejected
+PASS Invalid MOQ edit is rejected without changing current state
+PASS All original sheets and import diagnostics survive
+PASS Empty workspace can be saved
+
+11 project tests passed.
+PASS Local entry point is allowed
+PASS Local assets are allowed
+PASS Remote sites cannot be served
+PASS Arbitrary local files cannot be served
+PASS Path traversal is rejected
+PASS Untrusted subdomains cannot call IPC
+PASS Trusted hash navigation can call IPC
+PASS User info in URL is rejected
+PASS Only local blob exports are accepted
+PASS Renderer security features are explicitly enabled
+PASS Build has portable and installer targets
+
+11 desktop static tests passed.
+
+> procureflow@0.2.0 check:offline
+> node scripts/check-offline.cjs
+
+PASS: all web resources are local; no network API in shipped UI; CSP denies connections.

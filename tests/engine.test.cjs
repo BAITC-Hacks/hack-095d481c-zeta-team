@@ -1,0 +1,20 @@
+'use strict';
+const assert=require('node:assert/strict');const PF=require('../assets/engine.js');
+let passed=0;function test(name,fn){fn();console.log('PASS',name);passed++;}
+const data=PF.demo(),cfg={...PF.defaults,asOf:data.snapshot,categories:{}},p=structuredClone(data.products.demo1);
+p.stock=0;p.multiple=10;p.minQty=0;p.transit=[];p.plannedGrowth=0;p.leadDays=null;
+test('Nonnegative, finite, rounded purchase quantities',()=>{for(const r of PF.calculate(data,cfg)){assert(Number.isFinite(r.order));assert(r.order>=0);assert.equal(r.order%r.multiple,0);}});
+test('Incoming shipment reduces regular order',()=>{const a=PF.calculateOne(p,data,cfg),b=PF.calculateOne(p,data,cfg,{transit:500});assert(b.order<a.order);});
+test('Lead time increases demand',()=>{const a=PF.calculateOne(p,data,cfg,{lead:15}),b=PF.calculateOne(p,data,cfg,{lead:60});assert(b.demand>a.demand);});
+test('Higher stock reduces order',()=>{assert(PF.calculateOne(p,data,cfg,{stock:500}).order<PF.calculateOne(p,data,cfg,{stock:0}).order);});
+test('Growth input affects output',()=>{assert(PF.calculateOne(p,data,{...cfg,growth:50}).order>PF.calculateOne(p,data,cfg).order);});
+test('MOQ and pack size are separate',()=>{const q={...p,sales:Object.fromEntries(PF.monthsBefore(cfg.asOf,12).map(m=>[m,1])),transactions:[],multiple:12,minQty:50};assert.equal(PF.calculateOne(q,data,{...cfg,seasonality:false}).order,60);});
+test('Zero need never triggers minimum order',()=>{assert.equal(PF.calculateOne({...p,minQty:1000},data,cfg,{stock:1e9}).order,0);});
+test('Unknown stock is not silently zero',()=>{assert.equal(PF.calculateOne({...p,stock:null},data,cfg).order,null);});
+test('Exact stockout increases compensated demand',()=>{const a={...p,stockouts:[],transactions:[]},b={...a,stockouts:[{start:'2026-08-01',end:'2026-08-15'}]};assert(PF.calculateOne(b,data,cfg).demand>PF.calculateOne(a,data,cfg).demand);});
+test('Category multiplier affects output',()=>{assert(PF.calculateOne(p,data,{...cfg,categories:{[p.category]:{multiplier:1.8}}}).demand>PF.calculateOne(p,data,cfg).demand);});
+test('Seasonality input affects forecast',()=>{const a=PF.calculateOne(p,data,cfg),b=PF.calculateOne(p,{...data,seasonality:data.seasonality.map((x,i)=>i===9?x*2:x)},cfg);assert.notEqual(a.demand,b.demand);});
+test('Late and overdue shipments are not blindly subtracted',()=>{const q={...p,transit:[{qty:1000,eta:'2027-02-01'},{qty:1000,eta:'2026-09-01'}]};assert.equal(PF.calculateOne(q,data,cfg).transit,0);});
+test('A one-off monthly spike is suppressed',()=>{const a={...p,sales:Object.fromEntries(PF.monthsBefore(cfg.asOf,12).map(m=>[m,100])),transactions:[]},b=structuredClone(a);b.sales['2026-07']=10100;const c={...cfg,seasonality:false};assert.equal(PF.calculateOne(a,data,c).order,PF.calculateOne(b,data,c).order);});
+test('Excel report formats are recognized by headers',()=>{assert.equal(PF.classify({name:'x',file:'x',rows:[['Номенклатура','Номенклатура.Код','Артикул','Кратность','янв. 2024','февр. 2024','март 2024']]}).kind,'monthly-sales');assert.equal(PF.classify({name:'x',file:'x',rows:[['№','Номенклатура','Номенклатура.Код','Ед.изм','янв. 2024','февр. 2024','март 2024']]}).kind,'monthly-stock');});
+console.log(`\n${passed} tests passed.`);
