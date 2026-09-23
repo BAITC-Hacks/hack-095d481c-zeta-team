@@ -1,0 +1,17 @@
+{
+  "name": "procureflow-web",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Local procurement planning in the browser",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "start": "node scripts/serve.cjs",
+    "start:pages": "node scripts/serve.cjs --base-path /procureflow-web/",
+    "test": "node tests/engine.test.cjs && node tests/project.test.cjs && node tests/acceptance.test.cjs && node tests/web.test.cjs",
+    "check:offline": "node scripts/check-offline.cjs",
+    "build": "node scripts/build-web.cjs"
+  }
+}

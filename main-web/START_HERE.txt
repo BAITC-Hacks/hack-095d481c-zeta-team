@@ -1,0 +1,18 @@
+PROCUREFLOW WEB — БЫСТРЫЙ ЗАПУСК
+
+1. Установите Node.js 24 LTS: https://nodejs.org/
+2. Дважды щёлкните START-WEB.cmd.
+3. Откройте http://127.0.0.1:8000/ в Chrome или Edge.
+4. Оставьте окно сервера открытым. Для остановки нажмите Ctrl+C.
+
+Альтернатива: терминал в этой папке -> npm start.
+Установка npm-зависимостей не требуется.
+
+GitHub: создайте procureflow-web и загрузите СОДЕРЖИМОЕ этой папки, включая .github.
+Settings -> Pages -> Source: GitHub Actions.
+Actions -> Web checks and GitHub Pages -> Run workflow.
+Адрес сайта появится в Settings -> Pages.
+
+Сохраняйте рабочие данные кнопкой «Сохранить проект».
+Не загружайте коммерческие таблицы и .pfproject в GitHub.
+Подробности: README.md.
