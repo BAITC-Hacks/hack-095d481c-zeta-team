@@ -1,0 +1,26 @@
+ProcureFlow Windows 1.0 — отдельный Windows-репозиторий
+
+БЫСТРЫЙ ЗАПУСК ИСХОДНИКОВ
+1. Установите Node.js 22.12+ (рекомендуется 24).
+2. Откройте START-WINDOWS.cmd.
+   Первый запуск скачает зависимости. Повторные запуски откроют приложение.
+
+ИЗ ТЕРМИНАЛА В ЭТОЙ ПАПКЕ
+npm ci
+npm start
+
+ПОЛУЧИТЬ EXE
+Запустите BUILD-WINDOWS.cmd. Результаты появятся в dist:
+ProcureFlow-Portable-1.0.0-x64.exe — без установки;
+ProcureFlow-Setup-1.0.0-x64.exe — установщик.
+
+БЕЗ ЛОКАЛЬНОЙ СБОРКИ
+Загрузите содержимое этой папки в отдельный GitHub-репозиторий
+procureflow-windows. Actions → Build Windows EXE → успешный запуск →
+Artifacts → ProcureFlow-Windows-x64. Скачайте и распакуйте ZIP.
+Для готового EXE Node.js не нужен.
+
+Это исходники Windows. Для сайта используйте отдельную папку ProcureFlow-Web.
+Не копируйте файлы обеих версий в один корень репозитория.
+Не загружайте коммерческие XLSX/CSV/ZIP и проекты .pfproject в GitHub.
+Подробности: README.md и docs/DESKTOP.md.
