@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Smart Procurement — System Electric</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+  <style>
+    :root {
+      --bg: #07111f;
+      --panel: rgba(15, 29, 49, 0.82);
+      --panel-2: #101e32;
+      --text: #f6f8fc;
+      --muted: #8fa2bd;
+      --line: rgba(255,255,255,.08);
+      --green: #37d67a;
+      --blue: #5f8cff;
+      --orange: #ffad42;
+      --red: #ff5d6c;
+      --shadow: 0 24px 80px rgba(0,0,0,.28);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at 15% 0%, rgba(95,140,255,.18), transparent 34%),
+        radial-gradient(circle at 90% 20%, rgba(55,214,122,.09), transparent 30%),
+        var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    .shell {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 28px;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+      margin-bottom: 28px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .logo {
+      width: 46px;
+      height: 46px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--blue), var(--green));
+      display: grid;
+      place-items: center;
+      font-weight: 900;
+      color: white;
+      box-shadow: 0 12px 40px rgba(95,140,255,.25);
+    }
+
+    h1, h2, h3, p { margin-top: 0; }
+
+    .brand h1 {
+      font-size: 20px;
+      margin-bottom: 3px;
+    }
+
+    .brand p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .status {
+      padding: 9px 13px;
+      border: 1px solid rgba(55,214,122,.25);
+      background: rgba(55,214,122,.08);
+      color: #83efad;
+      border-radius: 999px;
+      font-size: 12px;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap: 22px;
+      margin-bottom: 22px;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(16px);
+    }
+
+    .hero-main {
+      padding: 34px;
+    }
+
+    .eyebrow {
+      color: #91aaff;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+    }
+
+    .hero-main h2 {
+      font-size: clamp(34px, 5vw, 62px);
+      line-height: 1.02;
+      max-width: 830px;
+      margin-bottom: 18px;
+      letter-spacing: -.04em;
+    }
+
+    .hero-main p {
+      color: var(--muted);
+      line-height: 1.7;
+      max-width: 780px;
+      font-size: 16px;
+    }
+
+    .upload {
+      margin-top: 28px;
+      border: 1px dashed rgba(255,255,255,.16);
+      border-radius: 20px;
+      padding: 24px;
+      background: rgba(255,255,255,.025);
+    }
+
+    .upload-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    .btn {
+      border: 0;
+      border-radius: 14px;
+      padding: 13px 17px;
+      cursor: pointer;
+      font-weight: 800;
+      font-size: 14px;
+      transition: .2s ease;
+    }
+
+    .btn:hover { transform: translateY(-1px); }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--blue), #7b62ff);
+      color: white;
+    }
+
+    .btn-secondary {
+      background: rgba(255,255,255,.07);
+      color: white;
+      border: 1px solid var(--line);
+    }
+
+    .btn-green {
+      background: var(--green);
+      color: #062013;
+    }
+
+    .file-note {
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 13px;
+    }
+
+    .hero-side {
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .metric {
+      padding: 18px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .metric:last-child { border-bottom: none; }
+
+    .metric span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 8px;
+    }
+
+    .metric strong {
+      font-size: 28px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 22px;
+    }
+
+    .kpi {
+      padding: 22px;
+    }
+
+    .kpi-label {
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 12px;
+    }
+
+    .kpi-value {
+      font-size: 30px;
+      font-weight: 900;
+      letter-spacing: -.03em;
+    }
+
+    .kpi-sub {
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 8px;
+    }
+
+    .workspace {
+      padding: 22px;
+    }
+
+    .workspace-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+
+    .workspace-head h3 { margin-bottom: 4px; }
+
+    .workspace-head p {
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 0;
+    }
+
+    .filters {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    select, input[type="search"] {
+      background: #0d192a;
+      border: 1px solid var(--line);
+      color: white;
+      padding: 10px 12px;
+      border-radius: 12px;
+      outline: none;
+    }
+
+    .table-wrap {
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 1050px;
+    }
+
+    th {
+      text-align: left;
+      color: var(--muted);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      padding: 14px 16px;
+      background: rgba(255,255,255,.025);
+      position: sticky;
+      top: 0;
+    }
+
+    td {
+      padding: 14px 16px;
+      border-top: 1px solid var(--line);
+      font-size: 13px;
+      vertical-align: top;
+    }
+
+    tr:hover td {
+      background: rgba(255,255,255,.018);
+    }
+
+    .badge {
+      display: inline-flex;
+      padding: 6px 9px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .risk-high {
+      color: #ff9aa5;
+      background: rgba(255,93,108,.12);
+    }
+
+    .risk-medium {
+      color: #ffd08c;
+      background: rgba(255,173,66,.12);
+    }
+
+    .risk-low {
+      color: #8fefb4;
+      background: rgba(55,214,122,.12);
+    }
+
+    .empty {
+      padding: 44px;
+      text-align: center;
+      color: var(--muted);
+    }
+
+    .footer {
+      text-align: center;
+      padding: 26px 0 10px;
+      color: #65758c;
+      font-size: 12px;
+    }
+
+    .small {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .reason {
+      max-width: 330px;
+      color: #c8d2df;
+      line-height: 1.45;
+    }
+
+    @media (max-width: 960px) {
+      .hero { grid-template-columns: 1fr; }
+      .grid { grid-template-columns: repeat(2, 1fr); }
+      .workspace-head { flex-direction: column; align-items: flex-start; }
+    }
+
+    @media (max-width: 560px) {
+      .shell { padding: 16px; }
+      header { align-items: flex-start; }
+      .grid { grid-template-columns: 1fr; }
+      .hero-main { padding: 24px; }
+      .hero-main h2 { font-size: 38px; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="shell">
+    <header>
+      <div class="brand">
+        <div class="logo">SP</div>
+        <div>
+          <h1>Smart Procurement</h1>
+          <p>System Electric · Hackathon MVP</p>
+        </div>
+      </div>
+      <div class="status">● MVP работает в браузере</div>
+    </header>
+
+    <section class="hero">
+      <div class="card hero-main">
+        <div class="eyebrow">Procurement Intelligence</div>
+        <h2>Excel → рекомендации по закупке</h2>
+        <p>
+          Загрузите одну или несколько Excel-выгрузок. Сервис попробует определить товары,
+          продажи, остатки, товар в пути и MOQ, после чего рассчитает ориентировочную
+          потребность и приоритет закупки.
+        </p>
+
+        <div class="upload">
+          <div class="upload-row">
+            <label class="btn btn-primary" for="filesInput">Выбрать Excel</label>
+            <input id="filesInput" type="file" accept=".xlsx,.xls,.csv" multiple />
+            <button id="analyzeBtn" class="btn btn-green">Рассчитать заказ</button>
+            <button id="demoBtn" class="btn btn-secondary">Показать демо</button>
+          </div>
+          <div id="fileNote" class="file-note">
+            Можно выбрать сразу несколько файлов .xlsx / .xls / .csv
+          </div>
+        </div>
+      </div>
+
+      <aside class="card hero-side">
+        <div>
+          <div class="eyebrow">Что учитываем</div>
+          <div class="metric">
+            <span>История продаж</span>
+            <strong>✓</strong>
+          </div>
+          <div class="metric">
+            <span>Остатки и товар в пути</span>
+            <strong>✓</strong>
+          </div>
+          <div class="metric">
+            <span>MOQ и выбросы</span>
+            <strong>✓</strong>
+          </div>
+        </div>
+        <div class="small">Финальное решение о заказе остаётся за менеджером.</div>
+      </aside>
+    </section>
+
+    <section class="grid">
+      <div class="card kpi">
+        <div class="kpi-label">Позиций обработано</div>
+        <div id="kpiItems" class="kpi-value">0</div>
+        <div class="kpi-sub">уникальных артикулов</div>
+      </div>
+
+      <div class="card kpi">
+        <div class="kpi-label">Рекомендуется заказать</div>
+        <div id="kpiOrder" class="kpi-value">0</div>
+        <div class="kpi-sub">единиц товара</div>
+      </div>
+
+      <div class="card kpi">
+        <div class="kpi-label">Высокий риск</div>
+        <div id="kpiRisk" class="kpi-value">0</div>
+        <div class="kpi-sub">позиций</div>
+      </div>
+
+      <div class="card kpi">
+        <div class="kpi-label">Обнаружено выбросов</div>
+        <div id="kpiOutliers" class="kpi-value">0</div>
+        <div class="kpi-sub">аномальных продаж</div>
+      </div>
+    </section>
+
+    <section class="card workspace">
+      <div class="workspace-head">
+        <div>
+          <h3>Рекомендованный заказ</h3>
+          <p>Прототип расчёта. Алгоритм будет уточняться по структуре исходных файлов.</p>
+        </div>
+
+        <div class="filters">
+          <input id="searchInput" type="search" placeholder="Поиск артикула..." />
+          <select id="riskFilter">
+            <option value="">Все риски</option>
+            <option value="Высокий">Высокий</option>
+            <option value="Средний">Средний</option>
+            <option value="Низкий">Низкий</option>
+          </select>
+          <button id="exportBtn" class="btn btn-secondary">Экспорт CSV</button>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Артикул</th>
+              <th>Наименование</th>
+              <th>Продажи</th>
+              <th>Остаток</th>
+              <th>В пути</th>
+              <th>MOQ</th>
+              <th>Прогноз</th>
+              <th>Заказать</th>
+              <th>Риск</th>
+              <th>Обоснование</th>
+            </tr>
+          </thead>
+          <tbody id="resultBody">
+            <tr>
+              <td colspan="10" class="empty">
+                Загрузите Excel-файлы или нажмите «Показать демо».
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <div class="footer">
+      Smart Procurement · static MVP for GitHub Pages
+    </div>
+  </div>
+
+<script>
+  const state = {
+    files: [],
+    rows: [],
+    results: []
+  };
+
+  const filesInput = document.getElementById("filesInput");
+  const fileNote = document.getElementById("fileNote");
+  const analyzeBtn = document.getElementById("analyzeBtn");
+  const demoBtn = document.getElementById("demoBtn");
+  const exportBtn = document.getElementById("exportBtn");
+  const searchInput = document.getElementById("searchInput");
+  const riskFilter = document.getElementById("riskFilter");
+
+  const aliases = {
+    sku: ["артикул", "sku", "код", "код товара", "номенклатура"],
+    name: ["наименование", "товар", "название", "наименование товара"],
+    qty: ["количество", "кол-во", "qty", "продажи", "продано", "реализация"],
+    stock: ["остаток", "остатки", "stock", "остаток на складе", "количество остаток"],
+    incoming: ["в пути", "товар в пути", "заказано", "incoming", "ожидается"],
+    moq: ["moq", "мин партия", "минимальная партия", "кратность"],
+    supplier: ["поставщик", "supplier"],
+    date: ["дата", "date", "дата продажи"]
+  };
+
+  function norm(v) {
+    return String(v ?? "")
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, " ");
+  }
+
+  function num(v) {
+    if (typeof v === "number") return Number.isFinite(v) ? v : 0;
+    if (v === null || v === undefined || v === "") return 0;
+    const cleaned = String(v)
+      .replace(/\s/g, "")
+      .replace(",", ".")
+      .replace(/[^\d.-]/g, "");
+    const n = parseFloat(cleaned);
+    return Number.isFinite(n) ? n : 0;
+  }
+
+  function findKey(obj, type) {
+    const keys = Object.keys(obj || {});
+    for (const key of keys) {
+      const n = norm(key);
+      if (aliases[type].includes(n)) return key;
+    }
+    for (const key of keys) {
+      const n = norm(key);
+      if (aliases[type].some(a => n.includes(a))) return key;
+    }
+    return null;
+  }
+
+  function median(values) {
+    const arr = values.filter(v => Number.isFinite(v)).sort((a,b)=>a-b);
+    if (!arr.length) return 0;
+    const mid = Math.floor(arr.length/2);
+    return arr.length % 2 ? arr[mid] : (arr[mid-1] + arr[mid])/2;
+  }
+
+  function detectOutliers(values) {
+    if (values.length < 4) return { clean: values, outliers: 0 };
+    const med = median(values);
+    const deviations = values.map(v => Math.abs(v - med));
+    const mad = median(deviations);
+
+    if (mad === 0) {
+      const threshold = Math.max(med * 3, med + 5);
+      const clean = values.filter(v => v <= threshold);
+      return { clean: clean.length ? clean : values, outliers: values.length - clean.length };
+    }
+
+    const clean = values.filter(v => {
+      const z = 0.6745 * Math.abs(v - med) / mad;
+      return z <= 3.5;
+    });
+
+    return { clean: clean.length ? clean : values, outliers: values.length - clean.length };
+  }
+
+  function roundToMOQ(value, moq) {
+    if (value <= 0) return 0;
+    if (!moq || moq <= 1) return Math.ceil(value);
+    return Math.ceil(value / moq) * moq;
+  }
+
+  function riskByCoverage(stock, incoming, forecast) {
+    const available = stock + incoming;
+    if (forecast <= 0) return "Низкий";
+    const coverage = available / forecast;
+    if (coverage < 0.5) return "Высокий";
+    if (coverage < 1.0) return "Средний";
+    return "Низкий";
+  }
+
+  function makeRecommendation(group) {
+    const sales = group.sales;
+    const { clean, outliers } = detectOutliers(sales);
+
+    const totalRegularSales = clean.reduce((a,b)=>a+b,0);
+    const avg = clean.length ? totalRegularSales / clean.length : 0;
+
+    // MVP: предполагаем горизонт закупки ~ 2 периода + страховой запас 25%.
+    const baseForecast = avg * 2;
+    const safetyStock = avg * 0.5;
+    const forecast = Math.max(0, baseForecast + safetyStock);
+
+    const available = group.stock + group.incoming;
+    const rawOrder = Math.max(0, forecast - available);
+    const order = roundToMOQ(rawOrder, group.moq);
+    const risk = riskByCoverage(group.stock, group.incoming, forecast);
+
+    const reasons = [];
+    if (order > 0) reasons.push(`прогноз ${Math.round(forecast)} ед.`);
+    if (group.stock <= avg) reasons.push("низкий текущий остаток");
+    if (group.incoming > 0) reasons.push(`учтено ${Math.round(group.incoming)} ед. в пути`);
+    if (group.moq > 1) reasons.push(`округление по MOQ ${group.moq}`);
+    if (outliers > 0) reasons.push(`исключено выбросов: ${outliers}`);
+    if (!reasons.length) reasons.push("доступного запаса достаточно");
+
+    return {
+      sku: group.sku,
+      name: group.name || "—",
+      supplier: group.supplier || "—",
+      sales: Math.round(totalRegularSales),
+      stock: Math.round(group.stock),
+      incoming: Math.round(group.incoming),
+      moq: group.moq || 1,
+      forecast: Math.round(forecast),
+      order: Math.round(order),
+      risk,
+      outliers,
+      reason: reasons.join("; ")
+    };
+  }
+
+  async function readFiles(files) {
+    const allRows = [];
+
+    for (const file of files) {
+      const data = await file.arrayBuffer();
+      const workbook = XLSX.read(data, { type: "array" });
+
+      workbook.SheetNames.forEach(sheetName => {
+        const sheet = workbook.Sheets[sheetName];
+        const json = XLSX.utils.sheet_to_json(sheet, { defval: null });
+        json.forEach(row => allRows.push({
+          ...row,
+          __file: file.name,
+          __sheet: sheetName
+        }));
+      });
+    }
+    return allRows;
+  }
+
+  function analyzeRows(rows) {
+    const groups = new Map();
+
+    for (const row of rows) {
+      const skuKey = findKey(row, "sku");
+      const nameKey = findKey(row, "name");
+      const qtyKey = findKey(row, "qty");
+      const stockKey = findKey(row, "stock");
+      const incomingKey = findKey(row, "incoming");
+      const moqKey = findKey(row, "moq");
+      const supplierKey = findKey(row, "supplier");
+
+      const sku = skuKey ? String(row[skuKey] ?? "").trim() : "";
+      const name = nameKey ? String(row[nameKey] ?? "").trim() : "";
+
+      // Если артикул не найден, пробуем использовать наименование как идентификатор.
+      const id = sku || name;
+      if (!id) continue;
+
+      if (!groups.has(id)) {
+        groups.set(id, {
+          sku: sku || id,
+          name,
+          supplier: supplierKey ? row[supplierKey] : "",
+          sales: [],
+          stock: 0,
+          incoming: 0,
+          moq: 1
+        });
+      }
+
+      const g = groups.get(id);
+
+      const q = qtyKey ? num(row[qtyKey]) : 0;
+      if (q > 0) g.sales.push(q);
+
+      if (stockKey) g.stock = Math.max(g.stock, num(row[stockKey]));
+      if (incomingKey) g.incoming = Math.max(g.incoming, num(row[incomingKey]));
+      if (moqKey) g.moq = Math.max(1, num(row[moqKey]) || 1);
+
+      if (!g.name && name) g.name = name;
+      if ((!g.supplier || g.supplier === "—") && supplierKey) g.supplier = row[supplierKey] || "";
+    }
+
+    return [...groups.values()]
+      .map(makeRecommendation)
+      .sort((a,b) => b.order - a.order);
+  }
+
+  function render() {
+    const query = norm(searchInput.value);
+    const risk = riskFilter.value;
+
+    const filtered = state.results.filter(r => {
+      const hay = norm(`${r.sku} ${r.name} ${r.supplier}`);
+      return (!query || hay.includes(query)) && (!risk || r.risk === risk);
+    });
+
+    const tbody = document.getElementById("resultBody");
+
+    if (!filtered.length) {
+      tbody.innerHTML = `<tr><td colspan="10" class="empty">Нет данных для отображения.</td></tr>`;
+    } else {
+      tbody.innerHTML = filtered.map(r => `
+        <tr>
+          <td><strong>${escapeHtml(r.sku)}</strong></td>
+          <td>${escapeHtml(r.name)}</td>
+          <td>${fmt(r.sales)}</td>
+          <td>${fmt(r.stock)}</td>
+          <td>${fmt(r.incoming)}</td>
+          <td>${fmt(r.moq)}</td>
+          <td>${fmt(r.forecast)}</td>
+          <td><strong>${fmt(r.order)}</strong></td>
+          <td><span class="badge ${riskClass(r.risk)}">${r.risk}</span></td>
+          <td class="reason">${escapeHtml(r.reason)}</td>
+        </tr>
+      `).join("");
+    }
+
+    const totalOrder = state.results.reduce((s,r)=>s+r.order,0);
+    const highRisk = state.results.filter(r=>r.risk==="Высокий").length;
+    const outliers = state.results.reduce((s,r)=>s+r.outliers,0);
+
+    document.getElementById("kpiItems").textContent = fmt(state.results.length);
+    document.getElementById("kpiOrder").textContent = fmt(totalOrder);
+    document.getElementById("kpiRisk").textContent = fmt(highRisk);
+    document.getElementById("kpiOutliers").textContent = fmt(outliers);
+  }
+
+  function fmt(v) {
+    return new Intl.NumberFormat("ru-RU").format(Math.round(v || 0));
+  }
+
+  function riskClass(risk) {
+    if (risk === "Высокий") return "risk-high";
+    if (risk === "Средний") return "risk-medium";
+    return "risk-low";
+  }
+
+  function escapeHtml(value) {
+    return String(value ?? "")
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
+      .replaceAll("'","&#039;");
+  }
+
+  filesInput.addEventListener("change", () => {
+    state.files = [...filesInput.files];
+    fileNote.textContent = state.files.length
+      ? `Выбрано файлов: ${state.files.length} — ${state.files.map(f=>f.name).join(", ")}`
+      : "Можно выбрать сразу несколько файлов .xlsx / .xls / .csv";
+  });
+
+  analyzeBtn.addEventListener("click", async () => {
+    if (!state.files.length) {
+      alert("Сначала выберите Excel-файлы.");
+      return;
+    }
+
+    analyzeBtn.disabled = true;
+    analyzeBtn.textContent = "Анализируем...";
+
+    try {
+      state.rows = await readFiles(state.files);
+      state.results = analyzeRows(state.rows);
+
+      if (!state.results.length) {
+        alert(
+          "Не удалось автоматически определить товары. " +
+          "Это нормально для MVP — следующий шаг: настроить сопоставление колонок под ваши Excel."
+        );
+      }
+
+      render();
+      fileNote.textContent =
+        `Прочитано строк: ${state.rows.length}. Найдено товарных позиций: ${state.results.length}.`;
+    } catch (e) {
+      console.error(e);
+      alert("Ошибка чтения Excel: " + e.message);
+    } finally {
+      analyzeBtn.disabled = false;
+      analyzeBtn.textContent = "Рассчитать заказ";
+    }
+  });
+
+  demoBtn.addEventListener("click", () => {
+    state.results = [
+      {
+        sku: "SE-10021", name: "Автоматический выключатель 16A", supplier: "Supplier A",
+        sales: 182, stock: 18, incoming: 20, moq: 12, forecast: 114,
+        order: 84, risk: "Высокий", outliers: 1,
+        reason: "прогноз 114 ед.; низкий текущий остаток; учтено 20 ед. в пути; округление по MOQ 12; исключено выбросов: 1"
+      },
+      {
+        sku: "SE-20804", name: "Контактор 25A", supplier: "Supplier B",
+        sales: 95, stock: 27, incoming: 24, moq: 6, forecast: 59,
+        order: 12, risk: "Средний", outliers: 0,
+        reason: "прогноз 59 ед.; учтено 24 ед. в пути; округление по MOQ 6"
+      },
+      {
+        sku: "SE-44311", name: "Реле контроля напряжения", supplier: "Supplier A",
+        sales: 48, stock: 70, incoming: 0, moq: 5, forecast: 30,
+        order: 0, risk: "Низкий", outliers: 0,
+        reason: "доступного запаса достаточно"
+      },
+      {
+        sku: "SE-55102", name: "Клеммная колодка", supplier: "Supplier C",
+        sales: 330, stock: 42, incoming: 0, moq: 50, forecast: 206,
+        order: 200, risk: "Высокий", outliers: 2,
+        reason: "прогноз 206 ед.; низкий текущий остаток; округление по MOQ 50; исключено выбросов: 2"
+      }
+    ];
+    render();
+    fileNote.textContent = "Показаны демонстрационные данные.";
+  });
+
+  searchInput.addEventListener("input", render);
+  riskFilter.addEventListener("change", render);
+
+  exportBtn.addEventListener("click", () => {
+    if (!state.results.length) {
+      alert("Сначала выполните расчёт.");
+      return;
+    }
+
+    const header = [
+      "Артикул","Наименование","Поставщик","Продажи","Остаток",
+      "В пути","MOQ","Прогноз","Рекомендуемый заказ","Риск","Обоснование"
+    ];
+
+    const rows = state.results.map(r => [
+      r.sku, r.name, r.supplier, r.sales, r.stock,
+      r.incoming, r.moq, r.forecast, r.order, r.risk, r.reason
+    ]);
+
+    const csv = [header, ...rows]
+      .map(row => row.map(cell => `"${String(cell ?? "").replaceAll('"','""')}"`).join(";"))
+      .join("\n");
+
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "recommended_orders.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+</script>
+</body>
+</html>
