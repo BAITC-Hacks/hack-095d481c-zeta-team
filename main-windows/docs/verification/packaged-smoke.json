@@ -1,0 +1,388 @@
+{
+  "ok": true,
+  "tests": [
+    {
+      "name": "Local custom protocol",
+      "ok": true
+    },
+    {
+      "name": "Desktop bridge",
+      "ok": true
+    },
+    {
+      "name": "No Node in renderer",
+      "ok": true
+    },
+    {
+      "name": "Trusted IPC",
+      "ok": true
+    },
+    {
+      "name": "Demo calculations",
+      "ok": true
+    },
+    {
+      "name": "Recommendations render",
+      "ok": true
+    },
+    {
+      "name": "Explanation dialog",
+      "ok": true
+    },
+    {
+      "name": "Warehouse and supplier settings",
+      "ok": true
+    },
+    {
+      "name": "Editable master data",
+      "ok": true
+    },
+    {
+      "name": "Master data updates and recalculates",
+      "ok": true
+    },
+    {
+      "name": "Network denied",
+      "ok": true
+    },
+    {
+      "name": "Client anonymized",
+      "ok": true
+    },
+    {
+      "name": "XLSX roundtrip",
+      "ok": true
+    },
+    {
+      "name": "Universal template imports both suppliers",
+      "ok": true
+    },
+    {
+      "name": "Approval asks for reviewer",
+      "ok": true
+    },
+    {
+      "name": "Approval recorded",
+      "ok": true
+    },
+    {
+      "name": "1C CSV created",
+      "ok": true
+    },
+    {
+      "name": "1C XLSX typed quantity",
+      "ok": true
+    },
+    {
+      "name": "Audit view",
+      "ok": true
+    },
+    {
+      "name": "Project orders restored",
+      "ok": true
+    },
+    {
+      "name": "Approvals reset on open",
+      "ok": true
+    },
+    {
+      "name": "Sources not persisted",
+      "ok": true
+    },
+    {
+      "name": "HTML language en",
+      "ok": true
+    },
+    {
+      "name": "Navigation translated en",
+      "ok": true
+    },
+    {
+      "name": "Selection persisted en",
+      "ok": true
+    },
+    {
+      "name": "Project unchanged en",
+      "ok": true
+    },
+    {
+      "name": "View renders dashboard en",
+      "ok": true
+    },
+    {
+      "name": "View renders recommendations en",
+      "ok": true
+    },
+    {
+      "name": "View renders suppliers en",
+      "ok": true
+    },
+    {
+      "name": "View renders import en",
+      "ok": true
+    },
+    {
+      "name": "View renders method en",
+      "ok": true
+    },
+    {
+      "name": "HTML language kk",
+      "ok": true
+    },
+    {
+      "name": "Navigation translated kk",
+      "ok": true
+    },
+    {
+      "name": "Selection persisted kk",
+      "ok": true
+    },
+    {
+      "name": "Project unchanged kk",
+      "ok": true
+    },
+    {
+      "name": "View renders dashboard kk",
+      "ok": true
+    },
+    {
+      "name": "View renders recommendations kk",
+      "ok": true
+    },
+    {
+      "name": "View renders suppliers kk",
+      "ok": true
+    },
+    {
+      "name": "View renders import kk",
+      "ok": true
+    },
+    {
+      "name": "View renders method kk",
+      "ok": true
+    },
+    {
+      "name": "HTML language ru",
+      "ok": true
+    },
+    {
+      "name": "Navigation translated ru",
+      "ok": true
+    },
+    {
+      "name": "Selection persisted ru",
+      "ok": true
+    },
+    {
+      "name": "Project unchanged ru",
+      "ok": true
+    },
+    {
+      "name": "View renders dashboard ru",
+      "ok": true
+    },
+    {
+      "name": "View renders recommendations ru",
+      "ok": true
+    },
+    {
+      "name": "View renders suppliers ru",
+      "ok": true
+    },
+    {
+      "name": "View renders import ru",
+      "ok": true
+    },
+    {
+      "name": "View renders method ru",
+      "ok": true
+    },
+    {
+      "name": "Pending settings preserved",
+      "ok": true
+    },
+    {
+      "name": "Product form user values preserved",
+      "ok": true
+    },
+    {
+      "name": "Unknown stock placeholder translated",
+      "ok": true
+    },
+    {
+      "name": "Warehouse source key remains stable",
+      "ok": true
+    },
+    {
+      "name": "Approval draft preserved",
+      "ok": true
+    },
+    {
+      "name": "1C field mapping preserved",
+      "ok": true
+    },
+    {
+      "name": "Pending forms did not change business state",
+      "ok": true
+    },
+    {
+      "name": "Explanation language",
+      "ok": true
+    },
+    {
+      "name": "No untranslated English UI text",
+      "ok": true
+    }
+  ],
+  "localization": {
+    "ok": true,
+    "tests": [
+      {
+        "name": "HTML language en",
+        "ok": true
+      },
+      {
+        "name": "Navigation translated en",
+        "ok": true
+      },
+      {
+        "name": "Selection persisted en",
+        "ok": true
+      },
+      {
+        "name": "Project unchanged en",
+        "ok": true
+      },
+      {
+        "name": "View renders dashboard en",
+        "ok": true
+      },
+      {
+        "name": "View renders recommendations en",
+        "ok": true
+      },
+      {
+        "name": "View renders suppliers en",
+        "ok": true
+      },
+      {
+        "name": "View renders import en",
+        "ok": true
+      },
+      {
+        "name": "View renders method en",
+        "ok": true
+      },
+      {
+        "name": "HTML language kk",
+        "ok": true
+      },
+      {
+        "name": "Navigation translated kk",
+        "ok": true
+      },
+      {
+        "name": "Selection persisted kk",
+        "ok": true
+      },
+      {
+        "name": "Project unchanged kk",
+        "ok": true
+      },
+      {
+        "name": "View renders dashboard kk",
+        "ok": true
+      },
+      {
+        "name": "View renders recommendations kk",
+        "ok": true
+      },
+      {
+        "name": "View renders suppliers kk",
+        "ok": true
+      },
+      {
+        "name": "View renders import kk",
+        "ok": true
+      },
+      {
+        "name": "View renders method kk",
+        "ok": true
+      },
+      {
+        "name": "HTML language ru",
+        "ok": true
+      },
+      {
+        "name": "Navigation translated ru",
+        "ok": true
+      },
+      {
+        "name": "Selection persisted ru",
+        "ok": true
+      },
+      {
+        "name": "Project unchanged ru",
+        "ok": true
+      },
+      {
+        "name": "View renders dashboard ru",
+        "ok": true
+      },
+      {
+        "name": "View renders recommendations ru",
+        "ok": true
+      },
+      {
+        "name": "View renders suppliers ru",
+        "ok": true
+      },
+      {
+        "name": "View renders import ru",
+        "ok": true
+      },
+      {
+        "name": "View renders method ru",
+        "ok": true
+      },
+      {
+        "name": "Pending settings preserved",
+        "ok": true
+      },
+      {
+        "name": "Product form user values preserved",
+        "ok": true
+      },
+      {
+        "name": "Unknown stock placeholder translated",
+        "ok": true
+      },
+      {
+        "name": "Warehouse source key remains stable",
+        "ok": true
+      },
+      {
+        "name": "Approval draft preserved",
+        "ok": true
+      },
+      {
+        "name": "1C field mapping preserved",
+        "ok": true
+      },
+      {
+        "name": "Pending forms did not change business state",
+        "ok": true
+      },
+      {
+        "name": "Explanation language",
+        "ok": true
+      },
+      {
+        "name": "No untranslated English UI text",
+        "ok": true
+      }
+    ],
+    "untranslatedEnglish": []
+  },
+  "consoleErrors": []
+}
