@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="ru" class="h-full bg-slate-900 text-slate-100">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Электрокомплект | Автоматизация заказов поставщикам (ABC/XYZ)</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0f7ff',
+                            100: '#e0effe',
+                            500: '#0284c7',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                            accent: '#f59e0b',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .matrix-cell {
+            transition: all 0.2s ease-in-out;
+        }
+        .matrix-cell:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        .matrix-cell.active {
+            ring: 2px solid #38bdf8;
+            box-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+    </style>
+</head>
+<body class="h-full flex flex-col font-sans bg-slate-950 text-slate-100 antialiased selection:bg-sky-500 selection:text-white">
+
+    <!-- Header Navbar -->
+    <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-30 shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Logo & Title -->
+                <div class="flex items-center space-x-4">
+                    <div class="bg-gradient-to-tr from-sky-600 to-cyan-500 text-white p-2.5 rounded-xl shadow-md shadow-sky-900/40 flex items-center justify-center">
+                        <i class="fa-solid fa-bolt text-xl"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center space-x-2">
+                            <span class="text-xl font-black tracking-wider text-white">EKT<span class="text-sky-400">.KZ</span></span>
+                            <span class="bg-sky-500/10 text-sky-400 text-xs px-2 py-0.5 rounded border border-sky-500/20 font-mono">HACKALEM AI</span>
+                        </div>
+                        <p class="text-xs text-slate-400">Сервис авторасчета заказов поставщикам (ABC/XYZ)</p>
+                    </div>
+                </div>
+
+                <!-- Right Nav Controls -->
+                <div class="flex items-center space-x-4">
+                    <div class="hidden md:flex items-center text-xs text-slate-400 space-x-4 border-r border-slate-800 pr-4">
+                        <span class="flex items-center"><i class="fa-solid fa-database text-emerald-400 mr-1.5"></i> 1С: УТ Подключено</span>
+                        <span class="flex items-center"><i class="fa-regular fa-clock text-sky-400 mr-1.5"></i> Обновлено: Сегодня, 13:45</span>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <div class="text-right hidden sm:block">
+                            <p class="text-sm font-medium text-slate-200">Нурлан Сатпаев</p>
+                            <p class="text-xs text-slate-400">Менеджер отдела закупа</p>
+                        </div>
+                        <div class="w-10 h-10 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-sky-400 font-bold shadow">
+                            НС
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+        <!-- Top Stats / KPI Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <!-- Total Recommended Order Value -->
+            <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 shadow-lg relative overflow-hidden group">
+                <div class="absolute -right-4 -bottom-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                    <i class="fa-solid fa-tenge-sign text-8xl text-sky-400"></i>
+                </div>
+                <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Сумма заказов</div>
+                <div class="text-2xl lg:text-3xl font-black text-white tracking-tight" id="kpi-total-sum">0 ₸</div>
+                <div class="mt-2 flex items-center text-xs text-slate-400">
+                    <span class="text-emerald-400 font-medium mr-1.5"><i class="fa-solid fa-arrow-down mr-0.5"></i>-12.4%</span>
+                    <span>к прошлой неделе (оптимизация C-запасов)</span>
+                </div>
+            </div>
+
+            <!-- Total Positions to Order -->
+            <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 shadow-lg relative overflow-hidden group">
+                <div class="absolute -right-4 -bottom-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                    <i class="fa-solid fa-boxes-stacked text-8xl text-indigo-400"></i>
+                </div>
+                <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Позиций к закупке</div>
+                <div class="text-2xl lg:text-3xl font-black text-white tracking-tight" id="kpi-total-items">0 SKU</div>
+                <div class="mt-2 flex items-center text-xs text-slate-400">
+                    <span class="text-sky-400 font-medium mr-1.5" id="kpi-selected-count">0</span>
+                    <span>позиций выбрано для отправки</span>
+                </div>
+            </div>
+
+            <!-- Stockout Risk Warning -->
+            <div class="bg-slate-900/90 border border-amber-500/20 rounded-2xl p-5 shadow-lg relative overflow-hidden group">
+                <div class="absolute -right-4 -bottom-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                    <i class="fa-solid fa-triangle-exclamation text-8xl text-amber-500"></i>
+                </div>
+                <div class="text-xs font-semibold text-amber-400 uppercase tracking-wider mb-1">Риск дефицита (Stockout)</div>
+                <div class="text-2xl lg:text-3xl font-black text-amber-400 tracking-tight" id="kpi-stockout-risk">0 SKU</div>
+                <div class="mt-2 flex items-center text-xs text-amber-200/70">
+                    <i class="fa-solid fa-circle-exclamation mr-1 text-amber-400"></i>
+                    <span>Требуют срочного подтверждения</span>
+                </div>
+            </div>
+
+            <!-- Highly Volatile / AX Priority -->
+            <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 shadow-lg relative overflow-hidden group">
+                <div class="absolute -right-4 -bottom-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                    <i class="fa-solid fa-chart-line text-8xl text-emerald-400"></i>
+                </div>
+                <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Доля класса AX / AY</div>
+                <div class="text-2xl lg:text-3xl font-black text-emerald-400 tracking-tight" id="kpi-ax-share">0%</div>
+                <div class="mt-2 flex items-center text-xs text-slate-400">
+                    <span class="text-emerald-400 font-medium mr-1"><i class="fa-solid fa-check-circle"></i> Высокая</span>
+                    <span>точность прогноза demand-модели</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ABC/XYZ Matrix & Insights Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- ABC/XYZ Interactive Matrix (2 Cols) -->
+            <div class="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 mb-4 border-b border-slate-800 gap-2">
+                    <div>
+                        <h2 class="text-base font-bold text-white flex items-center">
+                            <i class="fa-solid fa-table-cells-large text-sky-400 mr-2"></i>
+                            Интерактивная Матрица ABC / XYZ
+                        </h2>
+                        <p class="text-xs text-slate-400">Нажмите на сегмент для глубокой фильтрации списка товаров</p>
+                    </div>
+                    <button onclick="resetMatrixFilter()" class="self-start sm:self-auto text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg border border-slate-700 transition flex items-center">
+                        <i class="fa-solid fa-rotate-left mr-1.5"></i> Сбросить матричный фильтр
+                    </button>
+                </div>
+
+                <!-- Matrix Grid Container -->
+                <div class="grid grid-cols-4 gap-2 text-center text-xs">
+                    <!-- Top Left Corner Label -->
+                    <div class="flex items-center justify-center font-bold text-slate-500 bg-slate-950/40 rounded-xl p-2">
+                        ABC \ XYZ
+                    </div>
+                    <!-- Header X -->
+                    <div class="bg-slate-800/60 p-2.5 rounded-xl font-semibold text-slate-300">
+                        X <span class="block text-[10px] font-normal text-slate-400">Стабильный (CV &le; 20%)</span>
+                    </div>
+                    <!-- Header Y -->
+                    <div class="bg-slate-800/60 p-2.5 rounded-xl font-semibold text-slate-300">
+                        Y <span class="block text-[10px] font-normal text-slate-400">Колеблющийся (20-50%)</span>
+                    </div>
+                    <!-- Header Z -->
+                    <div class="bg-slate-800/60 p-2.5 rounded-xl font-semibold text-slate-300">
+                        Z <span class="block text-[10px] font-normal text-slate-400">Спорадический (&gt; 50%)</span>
+                    </div>
+
+                    <!-- Row A Label -->
+                    <div class="bg-slate-800/60 flex items-center justify-center font-bold text-sky-400 rounded-xl p-2">
+                        A <span class="hidden sm:inline text-[10px] font-normal text-slate-400 ml-1">(80% выручки)</span>
+                    </div>
+                    <!-- AX -->
+                    <div onclick="filterByMatrix('AX')" id="cell-AX" class="matrix-cell cursor-pointer bg-emerald-950/40 border border-emerald-500/30 hover:border-emerald-400 p-3 rounded-xl flex flex-col justify-between h-20 text-emerald-300">
+                        <div class="flex justify-between font-bold"><span>AX</span> <i class="fa-solid fa-shield-halved text-[10px] opacity-60"></i></div>
+                        <div class="text-lg font-black" id="count-AX">0</div>
+                        <div class="text-[10px] opacity-80 text-right">Высокая точность</div>
+                    </div>
+                    <!-- AY -->
+                    <div onclick="filterByMatrix('AY')" id="cell-AY" class="matrix-cell cursor-pointer bg-emerald-950/30 border border-emerald-600/20 hover:border-emerald-400 p-3 rounded-xl flex flex-col justify-between h-20 text-emerald-200">
+                        <div class="flex justify-between font-bold"><span>AY</span></div>
+                        <div class="text-lg font-black" id="count-AY">0</div>
+                        <div class="text-[10px] opacity-80 text-right">Сезонный прогноз</div>
+                    </div>
+                    <!-- AZ -->
+                    <div onclick="filterByMatrix('AZ')" id="cell-AZ" class="matrix-cell cursor-pointer bg-amber-950/30 border border-amber-600/30 hover:border-amber-400 p-3 rounded-xl flex flex-col justify-between h-20 text-amber-300">
+                        <div class="flex justify-between font-bold"><span>AZ</span> <i class="fa-solid fa-triangle-exclamation text-[10px]"></i></div>
+                        <div class="text-lg font-black" id="count-AZ">0</div>
+                        <div class="text-[10px] opacity-80 text-right">Риск выбросов</div>
+                    </div>
+
+                    <!-- Row B Label -->
+                    <div class="bg-slate-800/60 flex items-center justify-center font-bold text-indigo-400 rounded-xl p-2">
+                        B <span class="hidden sm:inline text-[10px] font-normal text-slate-400 ml-1">(15% выручки)</span>
+                    </div>
+                    <!-- BX -->
+                    <div onclick="filterByMatrix('BX')" id="cell-BX" class="matrix-cell cursor-pointer bg-slate-800/80 border border-slate-700 hover:border-sky-400 p-3 rounded-xl flex flex-col justify-between h-20 text-slate-200">
+                        <div class="flex justify-between font-bold"><span>BX</span></div>
+                        <div class="text-lg font-black" id="count-BX">0</div>
+                        <div class="text-[10px] opacity-70 text-right">Авто-точка заказа</div>
+                    </div>
+                    <!-- BY -->
+                    <div onclick="filterByMatrix('BY')" id="cell-BY" class="matrix-cell cursor-pointer bg-slate-800/80 border border-slate-700 hover:border-sky-400 p-3 rounded-xl flex flex-col justify-between h-20 text-slate-200">
+                        <div class="flex justify-between font-bold"><span>BY</span></div>
+                        <div class="text-lg font-black" id="count-BY">0</div>
+                        <div class="text-[10px] opacity-70 text-right">Плановый закуп</div>
+                    </div>
+                    <!-- BZ -->
+                    <div onclick="filterByMatrix('BZ')" id="cell-BZ" class="matrix-cell cursor-pointer bg-amber-950/20 border border-amber-800/30 hover:border-amber-400 p-3 rounded-xl flex flex-col justify-between h-20 text-amber-200/80">
+                        <div class="flex justify-between font-bold"><span>BZ</span></div>
+                        <div class="text-lg font-black" id="count-BZ">0</div>
+                        <div class="text-[10px] opacity-70 text-right">Порог остатка</div>
+                    </div>
+
+                    <!-- Row C Label -->
+                    <div class="bg-slate-800/60 flex items-center justify-center font-bold text-slate-400 rounded-xl p-2">
+                        C <span class="hidden sm:inline text-[10px] font-normal text-slate-400 ml-1">(5% выручки)</span>
+                    </div>
+                    <!-- CX -->
+                    <div onclick="filterByMatrix('CX')" id="cell-CX" class="matrix-cell cursor-pointer bg-slate-800/40 border border-slate-700/50 hover:border-slate-500 p-3 rounded-xl flex flex-col justify-between h-20 text-slate-400">
+                        <div class="flex justify-between font-bold"><span>CX</span></div>
+                        <div class="text-lg font-black" id="count-CX">0</div>
+                        <div class="text-[10px] opacity-70 text-right">Оптовые партии</div>
+                    </div>
+                    <!-- CY -->
+                    <div onclick="filterByMatrix('CY')" id="cell-CY" class="matrix-cell cursor-pointer bg-slate-800/40 border border-slate-700/50 hover:border-slate-500 p-3 rounded-xl flex flex-col justify-between h-20 text-slate-400">
+                        <div class="flex justify-between font-bold"><span>CY</span></div>
+                        <div class="text-lg font-black" id="count-CY">0</div>
+                        <div class="text-[10px] opacity-70 text-right">Редкий заказ</div>
+                    </div>
+                    <!-- CZ -->
+                    <div onclick="filterByMatrix('CZ')" id="cell-CZ" class="matrix-cell cursor-pointer bg-rose-950/20 border border-rose-900/40 hover:border-rose-400 p-3 rounded-xl flex flex-col justify-between h-20 text-rose-300">
+                        <div class="flex justify-between font-bold"><span>CZ</span> <i class="fa-solid fa-box-archive text-[10px]"></i></div>
+                        <div class="text-lg font-black" id="count-CZ">0</div>
+                        <div class="text-[10px] opacity-80 text-right">Затоваривание!</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Side Methodology Panel -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg flex flex-col justify-between">
+                <div>
+                    <h3 class="text-sm font-bold text-white mb-3 flex items-center">
+                        <i class="fa-solid fa-brain text-sky-400 mr-2"></i> Логика ИИ-Авторасчета
+                    </h3>
+                    <div class="space-y-3 text-xs text-slate-300">
+                        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
+                            <span class="font-bold text-sky-400 block mb-1">1. Очистка аномалий (B2B Сделки)</span>
+                            Разовые всплески крупнооптовых закупок отсекаются алгоритмом IQR/MAD, не раздувая стандартный прогноз.
+                        </div>
+                        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
+                            <span class="font-bold text-emerald-400 block mb-1">2. Учет Упущенного спроса</span>
+                            Дни с нулевым остатком (Stockout) компенсируются восстановительной медианой реальной потребности.
+                        </div>
+                        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
+                            <span class="font-bold text-amber-400 block mb-1">3. Формула Пополнения</span>
+                            <code class="text-[10px] text-slate-400 font-mono">Заказ = (Прогноз + SafetyStock) - Остаток - ВПути</code>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-4 pt-3 border-t border-slate-800 flex justify-between items-center text-xs text-slate-400">
+                    <span>Точность алгоритма: <strong class="text-emerald-400">94.8%</strong></span>
+                    <a href="#" onclick="alert('Документация методологии доступна в README.md'); return false;" class="text-sky-400 hover:underline">Подробнее &rarr;</a>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Controls & Filter Bar -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-lg space-y-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+                <!-- Search Input -->
+                <div class="relative lg:col-span-2">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-500 text-sm"></i>
+                    <input type="text" id="search-input" onkeyup="applyFilters()" placeholder="Поиск по артикулу, наименованию или поставщику..." 
+                        class="w-full pl-10 pr-4 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-sky-500 transition">
+                </div>
+
+                <!-- Filter ABC/XYZ -->
+                <div>
+                    <select id="filter-abcxyz" onchange="applyFilters()" class="w-full py-2 px-3 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-200 focus:outline-none focus:border-sky-500">
+                        <option value="ALL">Все классы ABC/XYZ</option>
+                        <option value="AX">AX — Высокая ценность / Стабильный</option>
+                        <option value="AY">AY — Высокая ценность / Сезонный</option>
+                        <option value="AZ">AZ — Высокая ценность / Спорадический</option>
+                        <option value="BX">BX — Средняя ценность / Стабильный</option>
+                        <option value="BY">BY — Средняя ценность / Сезонный</option>
+                        <option value="CZ">CZ — Низкая ценность / Спорадический</option>
+                    </select>
+                </div>
+
+                <!-- Filter Urgency -->
+                <div>
+                    <select id="filter-urgency" onchange="applyFilters()" class="w-full py-2 px-3 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-200 focus:outline-none focus:border-sky-500">
+                        <option value="ALL">Любая срочность</option>
+                        <option value="CRITICAL">🔥 Критическая (Дефицит)</option>
+                        <option value="MEDIUM">⚡ Средняя (Плановый)</option>
+                        <option value="LOW">🟢 Низкая (Пополнение)</option>
+                    </select>
+                </div>
+
+                <!-- Filter Supplier -->
+                <div>
+                    <select id="filter-supplier" onchange="applyFilters()" class="w-full py-2 px-3 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-200 focus:outline-none focus:border-sky-500">
+                        <option value="ALL">Все Поставщики</option>
+                        <option value="IEK Group">ИЭК Холдинг / IEK</option>
+                        <option value="Schneider Electric">Schneider Electric KZ</option>
+                        <option value="TDM Electric">TDM Electric</option>
+                        <option value="KEAZ">КЕАЗ (Кабель/Автоматы)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Action Toolbar Buttons -->
+            <div class="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-800/60 text-xs">
+                <div class="flex items-center space-x-2 text-slate-400">
+                    <button onclick="selectAllRows(true)" class="hover:text-white transition"><i class="fa-regular fa-square-check mr-1"></i> Выбрать все</button>
+                    <span>•</span>
+                    <button onclick="selectAllRows(false)" class="hover:text-white transition">Сбросить выбор</button>
+                    <span>•</span>
+                    <span id="active-filter-tag" class="hidden bg-sky-500/10 text-sky-400 px-2 py-0.5 rounded border border-sky-500/20 font-medium"></span>
+                </div>
+
+                <div class="flex items-center space-x-3">
+                    <button onclick="resetAllFilters()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl transition flex items-center">
+                        <i class="fa-solid fa-filter-circle-xmark mr-1.5"></i> Сбросить фильтры
+                    </button>
+                    <button onclick="exportToCSV()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl transition flex items-center font-medium">
+                        <i class="fa-solid fa-file-excel text-emerald-400 mr-1.5"></i> Экспорт CSV
+                    </button>
+                    <button onclick="approveOrders()" class="px-4 py-2 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white rounded-xl font-bold shadow-lg shadow-sky-600/30 transition flex items-center">
+                        <i class="fa-solid fa-check-double mr-1.5"></i> Утвердить выбранные заказы
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Data Table Container -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl shadow-xl overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs border-collapse">
+                    <thead>
+                        <tr class="bg-slate-950/80 text-slate-400 border-b border-slate-800 uppercase tracking-wider font-semibold">
+                            <th class="py-3.5 px-4 w-10 text-center">
+                                <input type="checkbox" id="master-checkbox" onclick="toggleAllCheckboxes(this)" class="rounded bg-slate-800 border-slate-700 text-sky-500 focus:ring-0">
+                            </th>
+                            <th class="py-3.5 px-4">Артикул & Наименование</th>
+                            <th class="py-3.5 px-4">Поставщик</th>
+                            <th class="py-3.5 px-4 text-center">Класс</th>
+                            <th class="py-3.5 px-4 text-right">Остаток</th>
+                            <th class="py-3.5 px-4 text-right">В пути</th>
+                            <th class="py-3.5 px-4 text-right">Прогноз (30д)</th>
+                            <th class="py-3.5 px-4 text-center w-36">Реком. Заказ</th>
+                            <th class="py-3.5 px-4">Обоснование ИИ (Explainability)</th>
+                            <th class="py-3.5 px-4 text-center">Срочность</th>
+                            <th class="py-3.5 px-4 text-center">Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody id="orders-table-body" class="divide-y divide-slate-800/60 font-normal text-slate-200">
+                        <!-- Table Rows will be dynamically rendered here via JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Table Footer Summary -->
+            <div class="bg-slate-950 px-6 py-3 border-t border-slate-800 flex flex-col sm:flex-row justify-between items-center text-xs text-slate-400 gap-2">
+                <div>Показано <span id="visible-count" class="font-bold text-white">0</span> из <span id="total-count" class="font-bold text-white">0</span> товаров</div>
+                <div class="flex items-center space-x-4">
+                    <span>Итого объем заказа: <strong class="text-sky-400 font-bold" id="footer-total-qty">0 шт</strong></span>
+                    <span>Итого сумма: <strong class="text-emerald-400 font-bold text-sm" id="footer-total-sum">0 ₸</strong></span>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Modal: B2B Anomaly & Explainability Details -->
+    <div id="details-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-2xl w-full shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <!-- Modal Header -->
+            <div class="px-6 py-4 bg-slate-950 border-b border-slate-800 flex justify-between items-center">
+                <div class="flex items-center space-x-2">
+                    <div class="p-2 bg-sky-500/10 text-sky-400 rounded-lg">
+                        <i class="fa-solid fa-chart-line text-base"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-bold text-white" id="modal-sku-title">Детализация расчета SKU</h3>
+                        <p class="text-xs text-slate-400" id="modal-sku-subtitle">Анализ аномалий и восстановления упущенного спроса</p>
+                    </div>
+                </div>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-white p-2 rounded-lg hover:bg-slate-800 transition">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="p-6 space-y-5 text-xs text-slate-300 max-h-[75vh] overflow-y-auto">
+                <!-- Highlight Cards -->
+                <div class="grid grid-cols-3 gap-3 text-center">
+                    <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
+                        <div class="text-slate-400 text-[10px] uppercase">Класс ABC/XYZ</div>
+                        <div class="text-base font-bold text-sky-400 mt-1" id="modal-abc">AX</div>
+                    </div>
+                    <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
+                        <div class="text-slate-400 text-[10px] uppercase">Исключено аномалий</div>
+                        <div class="text-base font-bold text-amber-400 mt-1" id="modal-outlier-qty">150 шт</div>
+                    </div>
+                    <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
+                        <div class="text-slate-400 text-[10px] uppercase">Компенсация Stockout</div>
+                        <div class="text-base font-bold text-emerald-400 mt-1" id="modal-stockout-comp">+24 шт</div>
+                    </div>
+                </div>
+
+                <!-- B2B Excluded Order Box -->
+                <div class="bg-amber-950/20 border border-amber-500/30 rounded-xl p-4 space-y-2">
+                    <div class="flex items-center justify-between text-amber-400 font-bold">
+                        <span><i class="fa-solid fa-filter text-amber-400 mr-1.5"></i> Отфильтрована разовая B2B сделка</span>
+                        <span class="text-[10px] bg-amber-500/20 px-2 py-0.5 rounded border border-amber-500/40">Отклонение > 3.2&sigma;</span>
+                    </div>
+                    <p class="text-slate-300 leading-relaxed">
+                        14 дней назад зарегистрирована разовая оптовая продажа клиенту <code class="text-amber-300 font-mono bg-amber-950/60 px-1 rounded">ID_CLIENT_#8841</code> в объеме <strong class="text-white" id="modal-outlier-detail">150 шт.</strong> Данный заказ исключен из ежедневного профиля регулярных продаж, чтобы не завышать норму запаса.
+                    </p>
+                </div>
+
+                <!-- Sales & Stock Chart Canvas -->
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800">
+                    <div class="text-xs font-semibold text-slate-300 mb-2">Динамика продаж и остатков (30 дней)</div>
+                    <div class="h-44">
+                        <canvas id="modalChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Explanation Breakdown List -->
+                <div class="space-y-2">
+                    <div class="font-bold text-slate-200">Математическое обоснование $Q_{rec}$:</div>
+                    <ul class="space-y-1.5 list-disc list-inside text-slate-400 pl-1">
+                        <li>Среднесуточные регулярные продажи: <strong class="text-slate-200" id="modal-daily-avg">4.2 шт/день</strong></li>
+                        <li>Срок поставки (Lead Time): <strong class="text-slate-200" id="modal-lead-time">14 дней</strong></li>
+                        <li>Страховой запас (Safety Stock): <strong class="text-slate-200" id="modal-safety-stock">18 шт</strong></li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="px-6 py-3 bg-slate-950 border-t border-slate-800 flex justify-end">
+                <button onclick="closeModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl font-medium transition text-xs">
+                    Закрыть окно
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Mock dataset based on EKT Electrokomplekt case specifications
+        const mockData = [
+            {
+                id: 1,
+                sku: "IEK-AVT-C16-3P",
+                name: "Автоматический выключатель ВА47-29 3P 16A C IEK",
+                supplier: "IEK Group",
+                abcxyz: "AX",
+                price: 2850,
+                stock: 45,
+                inTransit: 50,
+                forecast: 180,
+                recommendedQty: 120,
+                urgency: "CRITICAL",
+                selected: true,
+                explanation: "Товар AX. Выявлен дефицит (Stockout 4 дня). Скооректировано +32 шт. Удалена крупная сделка (200 шт).",
+                leadTime: 12,
+                outlierQty: 200,
+                stockoutComp: 32,
+                dailyAvg: 6.0
+            },
+            {
+                id: 2,
+                sku: "SE-ATV320U15N4C",
+                name: "Частотный преобразователь Altivar320 1.5кВт 380В Schneider",
+                supplier: "Schneider Electric",
+                abcxyz: "AY",
+                price: 185000,
+                stock: 3,
+                inTransit: 5,
+                forecast: 12,
+                recommendedQty: 8,
+                urgency: "MEDIUM",
+                selected: true,
+                explanation: "Товар AY. Сезонный рост спроса +18%. Пополнение базового запаса.",
+                leadTime: 21,
+                outlierQty: 0,
+                stockoutComp: 0,
+                dailyAvg: 0.4
+            },
+            {
+                id: 3,
+                sku: "KEAZ-AP50B-3MT",
+                name: "Выключатель автоматический АП50Б 3МТ 16А КЕАЗ",
+                supplier: "KEAZ",
+                abcxyz: "AZ",
+                price: 8400,
+                stock: 12,
+                inTransit: 0,
+                forecast: 25,
+                recommendedQty: 30,
+                urgency: "CRITICAL",
+                selected: false,
+                explanation: "Спорадический спрос. Разовая закупка отсечена. Высокий страховой запас.",
+                leadTime: 14,
+                outlierQty: 80,
+                stockoutComp: 10,
+                dailyAvg: 0.8
+            },
+            {
+                id: 4,
+                sku: "TDM-KAB-VRRG-3X25",
+                name: "Кабель ВВГнг-LS 3х2.5 кв.мм (100м) TDM",
+                supplier: "TDM Electric",
+                abcxyz: "BX",
+                price: 34500,
+                stock: 120,
+                inTransit: 100,
+                forecast: 300,
+                recommendedQty: 150,
+                urgency: "MEDIUM",
+                selected: true,
+                explanation: "Стабильный спрос BX. Пополнение до точки перезаказа (Reorder Point).",
+                leadTime: 7,
+                outlierQty: 0,
+                stockoutComp: 15,
+                dailyAvg: 10.0
+            },
+            {
+                id: 5,
+                sku: "IEK-SVT-LED-60W",
+                name: "Светильник светодиодный ДСП 60Вт IP65 IEK",
+                supplier: "IEK Group",
+                abcxyz: "BY",
+                price: 11200,
+                stock: 80,
+                inTransit: 0,
+                forecast: 90,
+                recommendedQty: 40,
+                urgency: "LOW",
+                selected: false,
+                explanation: "Плановый закуп. Умеренные сезонные колебания.",
+                leadTime: 10,
+                outlierQty: 0,
+                stockoutComp: 0,
+                dailyAvg: 3.0
+            },
+            {
+                id: 6,
+                sku: "SE-RES-R9F22216",
+                name: "Автомат 2P 16A C Resi9 Schneider Electric",
+                supplier: "Schneider Electric",
+                abcxyz: "AX",
+                price: 3100,
+                stock: 15,
+                inTransit: 0,
+                forecast: 210,
+                recommendedQty: 220,
+                urgency: "CRITICAL",
+                selected: true,
+                explanation: "Критический остаток! Прогноз 210 шт. Учтен упущенный спрос за 5 дней zero-stock.",
+                leadTime: 14,
+                outlierQty: 120,
+                stockoutComp: 45,
+                dailyAvg: 7.0
+            },
+            {
+                id: 7,
+                sku: "TDM-SHRN-ST-30",
+                name: "Щит распределительный навесной ЩРн-12з IP31 TDM",
+                supplier: "TDM Electric",
+                abcxyz: "CZ",
+                price: 6700,
+                stock: 85,
+                inTransit: 0,
+                forecast: 10,
+                recommendedQty: 0,
+                urgency: "LOW",
+                selected: false,
+                explanation: "Низкая оборачиваемость (CZ). Рекомендация: Заказ НЕ требуется (Риск затоваривания).",
+                leadTime: 14,
+                outlierQty: 50,
+                stockoutComp: 0,
+                dailyAvg: 0.3
+            },
+            {
+                id: 8,
+                sku: "KEAZ-CON-100A",
+                name: "Контактор магнитный ПМ12-100 (100А) КЕАЗ",
+                supplier: "KEAZ",
+                abcxyz: "BZ",
+                price: 42000,
+                stock: 6,
+                inTransit: 10,
+                forecast: 15,
+                recommendedQty: 10,
+                urgency: "LOW",
+                selected: true,
+                explanation: "Пополнение минимального страхового запаса.",
+                leadTime: 18,
+                outlierQty: 0,
+                stockoutComp: 0,
+                dailyAvg: 0.5
+            }
+        ];
+
+        let state = {
+            items: [...mockData],
+            activeMatrixFilter: null,
+            modalChartInstance: null
+        };
+
+        // Format Currency KZT
+        function formatKZT(amount) {
+            return new Intl.NumberFormat('ru-KZ', { style: 'currency', currency: 'KZT', maximumFractionDigits: 0 }).format(amount);
+        }
+
+        // Initialize and Render Table & Statistics
+        function renderApp() {
+            renderTable();
+            updateKPIs();
+            updateMatrixCounts();
+        }
+
+        // Render Data Table
+        function renderTable() {
+            const tbody = document.getElementById('orders-table-body');
+            tbody.innerHTML = '';
+
+            const filtered = getFilteredItems();
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="11" class="py-12 text-center text-slate-500">
+                            <i class="fa-solid fa-box-open text-4xl mb-3 block opacity-40"></i>
+                            По Вашему запросу позиций не найдено
+                        </td>
+                    </tr>
+                `;
+                document.getElementById('visible-count').innerText = 0;
+                document.getElementById('footer-total-qty').innerText = "0 шт";
+                document.getElementById('footer-total-sum').innerText = "0 ₸";
+                return;
+            }
+
+            let totalQty = 0;
+            let totalSum = 0;
+
+            filtered.forEach(item => {
+                const itemTotalSum = item.recommendedQty * item.price;
+                totalQty += item.recommendedQty;
+                totalSum += itemTotalSum;
+
+                // Urgency badge styling
+                let urgencyBadge = '';
+                if (item.urgency === 'CRITICAL') {
+                    urgencyBadge = `<span class="bg-rose-500/10 text-rose-400 border border-rose-500/30 px-2 py-0.5 rounded-full text-[10px] font-bold flex items-center justify-center"><i class="fa-solid fa-fire mr-1"></i> Критическая</span>`;
+                } else if (item.urgency === 'MEDIUM') {
+                    urgencyBadge = `<span class="bg-amber-500/10 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded-full text-[10px] font-bold flex items-center justify-center"><i class="fa-solid fa-clock mr-1"></i> Средняя</span>`;
+                } else {
+                    urgencyBadge = `<span class="bg-slate-800 text-slate-400 px-2 py-0.5 rounded-full text-[10px] font-medium flex items-center justify-center">Низкая</span>`;
+                }
+
+                // ABC/XYZ Badge styling
+                let classBadge = 'bg-slate-800 text-slate-300';
+                if (item.abcxyz.startsWith('A')) classBadge = 'bg-sky-500/20 text-sky-300 border border-sky-500/30 font-bold';
+                else if (item.abcxyz.startsWith('B')) classBadge = 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30';
+                else classBadge = 'bg-slate-800 text-slate-400';
+
+                const tr = document.createElement('tr');
+                tr.className = `hover:bg-slate-800/40 transition border-b border-slate-800/50 ${item.selected ? 'bg-sky-950/10' : ''}`;
+                tr.innerHTML = `
+                    <td class="py-3 px-4 text-center">
+                        <input type="checkbox" ${item.selected ? 'checked' : ''} onchange="toggleItemSelection(${item.id}, this.checked)" class="rounded bg-slate-800 border-slate-700 text-sky-500 focus:ring-0 cursor-pointer">
+                    </td>
+                    <td class="py-3 px-4">
+                        <div class="font-bold text-white text-xs">${item.name}</div>
+                        <div class="text-[10px] text-slate-400 font-mono mt-0.5">Арт: ${item.sku}</div>
+                    </td>
+                    <td class="py-3 px-4 text-slate-300 font-medium">${item.supplier}</td>
+                    <td class="py-3 px-4 text-center">
+                        <span class="px-2 py-0.5 rounded text-[11px] font-mono ${classBadge}">${item.abcxyz}</span>
+                    </td>
+                    <td class="py-3 px-4 text-right font-mono ${item.stock < 10 ? 'text-amber-400 font-bold' : 'text-slate-300'}">${item.stock} шт</td>
+                    <td class="py-3 px-4 text-right font-mono text-slate-400">${item.inTransit} шт</td>
+                    <td class="py-3 px-4 text-right font-mono text-slate-300">${item.forecast} шт</td>
+                    <td class="py-3 px-4 text-center">
+                        <input type="number" min="0" value="${item.recommendedQty}" onchange="updateItemQty(${item.id}, this.value)" 
+                            class="w-24 text-center bg-slate-950 border border-slate-700 focus:border-sky-500 rounded-lg py-1 px-1.5 font-bold text-sky-400 font-mono text-xs focus:outline-none">
+                    </td>
+                    <td class="py-3 px-4">
+                        <div class="text-[11px] text-slate-300 bg-slate-950/60 p-2 rounded-lg border border-slate-800/80 leading-tight">
+                            ${item.explanation}
+                        </div>
+                    </td>
+                    <td class="py-3 px-4 text-center">${urgencyBadge}</td>
+                    <td class="py-3 px-4 text-center">
+                        <button onclick="openModal(${item.id})" title="Просмотреть аналитику аномалий" class="p-1.5 bg-slate-800 hover:bg-sky-600/30 hover:text-sky-300 text-slate-400 rounded-lg transition">
+                            <i class="fa-solid fa-chart-pie text-xs"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('visible-count').innerText = filtered.length;
+            document.getElementById('total-count').innerText = state.items.length;
+            document.getElementById('footer-total-qty').innerText = `${totalQty} шт`;
+            document.getElementById('footer-total-sum').innerText = formatKZT(totalSum);
+        }
+
+        // Apply Filters Logic
+        function getFilteredItems() {
+            const search = document.getElementById('search-input').value.toLowerCase();
+            const abcxyz = document.getElementById('filter-abcxyz').value;
+            const urgency = document.getElementById('filter-urgency').value;
+            const supplier = document.getElementById('filter-supplier').value;
+
+            return state.items.filter(item => {
+                const matchesSearch = item.name.toLowerCase().includes(search) || item.sku.toLowerCase().includes(search) || item.supplier.toLowerCase().includes(search);
+                const matchesAbc = abcxyz === 'ALL' || item.abcxyz === abcxyz;
+                const matchesUrgency = urgency === 'ALL' || item.urgency === urgency;
+                const matchesSupplier = supplier === 'ALL' || item.supplier === supplier;
+                const matchesMatrix = !state.activeMatrixFilter || item.abcxyz === state.activeMatrixFilter;
+
+                return matchesSearch && matchesAbc && matchesUrgency && matchesSupplier && matchesMatrix;
+            });
+        }
+
+        function applyFilters() {
+            renderTable();
+        }
+
+        // Filter by Matrix Cell Click
+        function filterByMatrix(segment) {
+            if (state.activeMatrixFilter === segment) {
+                state.activeMatrixFilter = null; // Toggle off
+            } else {
+                state.activeMatrixFilter = segment;
+            }
+
+            // Update Active Matrix Visual States
+            document.querySelectorAll('.matrix-cell').forEach(cell => cell.classList.remove('active'));
+            if (state.activeMatrixFilter) {
+                const activeCell = document.getElementById(`cell-${state.activeMatrixFilter}`);
+                if (activeCell) activeCell.classList.add('active');
+                document.getElementById('active-filter-tag').innerText = `Сегмент: ${state.activeMatrixFilter}`;
+                document.getElementById('active-filter-tag').classList.remove('hidden');
+            } else {
+                document.getElementById('active-filter-tag').classList.add('hidden');
+            }
+
+            renderTable();
+        }
+
+        function resetMatrixFilter() {
+            state.activeMatrixFilter = null;
+            document.querySelectorAll('.matrix-cell').forEach(cell => cell.classList.remove('active'));
+            document.getElementById('active-filter-tag').classList.add('hidden');
+            renderTable();
+        }
+
+        function resetAllFilters() {
+            document.getElementById('search-input').value = '';
+            document.getElementById('filter-abcxyz').value = 'ALL';
+            document.getElementById('filter-urgency').value = 'ALL';
+            document.getElementById('filter-supplier').value = 'ALL';
+            resetMatrixFilter();
+        }
+
+        // Update Matrix Item Counters
+        function updateMatrixCounts() {
+            const counts = { AX:0, AY:0, AZ:0, BX:0, BY:0, BZ:0, CX:0, CY:0, CZ:0 };
+            state.items.forEach(item => {
+                if (counts[item.abcxyz] !== undefined) {
+                    counts[item.abcxyz]++;
+                }
+            });
+
+            for (const key in counts) {
+                const el = document.getElementById(`count-${key}`);
+                if (el) el.innerText = counts[key];
+            }
+        }
+
+        // KPI Calculations
+        function updateKPIs() {
+            const totalSum = state.items.reduce((acc, item) => acc + (item.recommendedQty * item.price), 0);
+            const totalItems = state.items.length;
+            const stockoutRiskCount = state.items.filter(item => item.urgency === 'CRITICAL').length;
+            const axCount = state.items.filter(item => item.abcxyz.startsWith('A')).length;
+            const axShare = totalItems > 0 ? ((axCount / totalItems) * 100).toFixed(1) : 0;
+            const selectedCount = state.items.filter(i => i.selected).length;
+
+            document.getElementById('kpi-total-sum').innerText = formatKZT(totalSum);
+            document.getElementById('kpi-total-items').innerText = `${totalItems} SKU`;
+            document.getElementById('kpi-stockout-risk').innerText = `${stockoutRiskCount} SKU`;
+            document.getElementById('kpi-ax-share').innerText = `${axShare}%`;
+            document.getElementById('kpi-selected-count').innerText = selectedCount;
+        }
+
+        // Selection Handlers
+        function toggleItemSelection(id, isSelected) {
+            const item = state.items.find(i => i.id === id);
+            if (item) {
+                item.selected = isSelected;
+                updateKPIs();
+            }
+        }
+
+        function selectAllRows(select) {
+            getFilteredItems().forEach(item => item.selected = select);
+            document.getElementById('master-checkbox').checked = select;
+            renderTable();
+            updateKPIs();
+        }
+
+        function toggleAllCheckboxes(master) {
+            selectAllRows(master.checked);
+        }
+
+        function updateItemQty(id, newQty) {
+            const item = state.items.find(i => i.id === id);
+            if (item) {
+                item.recommendedQty = Math.max(0, parseInt(newQty) || 0);
+                renderTable();
+                updateKPIs();
+            }
+        }
+
+        // Modal Window Handlers
+        function openModal(id) {
+            const item = state.items.find(i => i.id === id);
+            if (!item) return;
+
+            document.getElementById('modal-sku-title').innerText = item.name;
+            document.getElementById('modal-sku-subtitle').innerText = `Артикул: ${item.sku} | Поставщик: ${item.supplier}`;
+            document.getElementById('modal-abc').innerText = item.abcxyz;
+            document.getElementById('modal-outlier-qty').innerText = `${item.outlierQty} шт`;
+            document.getElementById('modal-stockout-comp').innerText = `+${item.stockoutComp} шт`;
+            document.getElementById('modal-outlier-detail').innerText = `${item.outlierQty} шт`;
+            document.getElementById('modal-daily-avg').innerText = `${item.dailyAvg} шт/день`;
+            document.getElementById('modal-lead-time').innerText = `${item.leadTime} дней`;
+            document.getElementById('modal-safety-stock').innerText = `${Math.round(item.dailyAvg * 3)} шт`;
+
+            document.getElementById('details-modal').classList.remove('hidden');
+
+            // Render Chart.js
+            setTimeout(() => renderModalChart(item), 100);
+        }
+
+        function closeModal() {
+            document.getElementById('details-modal').classList.add('hidden');
+        }
+
+        function renderModalChart(item) {
+            const ctx = document.getElementById('modalChart').getContext('2d');
+            
+            if (state.modalChartInstance) {
+                state.modalChartInstance.destroy();
+            }
+
+            const labels = Array.from({length: 15}, (_, i) => `День ${i + 1}`);
+            const rawSales = [4, 5, 3, 6, 4, 150, 5, 0, 0, 2, 6, 5, 4, 7, 5]; // Sample with outlier at day 6
+            const cleanedSales = [4, 5, 3, 6, 4, 5, 5, 4, 4, 2, 6, 5, 4, 7, 5]; // Cleaned demand
+
+            state.modalChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Сырые продажи (с аномалией B2B)',
+                            data: rawSales,
+                            borderColor: '#f59e0b',
+                            backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                            borderDash: [5, 5],
+                            tension: 0.2
+                        },
+                        {
+                            label: 'Очищенный регулярный спрос (ИИ)',
+                            data: cleanedSales,
+                            borderColor: '#0284c7',
+                            backgroundColor: 'rgba(2, 132, 199, 0.2)',
+                            fill: true,
+                            tension: 0.3
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: { color: '#94a3b8', font: { size: 10 } }
+                        }
+                    },
+                    scales: {
+                        x: { ticks: { color: '#64748b', font: { size: 9 } }, grid: { color: '#1e293b' } },
+                        y: { ticks: { color: '#64748b', font: { size: 9 } }, grid: { color: '#1e293b' } }
+                    }
+                }
+            });
+        }
+
+        // Export and Order Actions
+        function exportToCSV() {
+            const selectedItems = state.items.filter(i => i.selected);
+            if (selectedItems.length === 0) {
+                alert("Пожалуйста, выберите хотя бы одну позицию для экспорта!");
+                return;
+            }
+
+            let csvContent = "data:text/csv;charset=utf-8,Артикул;Наименование;Поставщик;Класс;Заказ;Цена;Сумма\n";
+            selectedItems.forEach(i => {
+                csvContent += `${i.sku};"${i.name}";${i.supplier};${i.abcxyz};${i.recommendedQty};${i.price};${i.recommendedQty * i.price}\n`;
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `Заказ_Поставщикам_EKT_${new Date().toISOString().slice(0,10)}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function approveOrders() {
+            const selected = state.items.filter(i => i.selected);
+            if (selected.length === 0) {
+                alert("Выберите хотя бы один заказ для утверждения.");
+                return;
+            }
+
+            const totalSum = selected.reduce((acc, i) => acc + (i.recommendedQty * i.price), 0);
+            
+            if (confirm(`Утвердить ${selected.length} заказов на общую сумму ${formatKZT(totalSum)}?\nДанные будут переданы в учетную систему 1С.`)) {
+                alert("Успешно! Заказы отправлены на формирование в 1С:Управление Торговлей.");
+            }
+        }
+
+        // Run App Initialization on Load
+        window.onload = function() {
+            renderApp();
+        };
+    </script>
+</body>
+</html>
