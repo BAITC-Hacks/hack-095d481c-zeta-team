@@ -1,0 +1,33 @@
+﻿'use strict';
+const assert=require('node:assert/strict'),PF=require('../assets/planner.js'),Project=require('../assets/project.js');let count=0;
+function test(name,fn){fn();console.log('PASS',name);count++;}
+const cfg={...PF.defaults,asOf:'2026-09-22',seasonality:false,currentMonth:false,categories:{}};
+const data=PF.demo(),p={...structuredClone(data.products.demo1),stock:0,multiple:1,minQty:0,leadDays:30,plannedGrowth:0,transactions:[],stockouts:[],transit:[],sales:Object.fromEntries(PF.monthsBefore(cfg.asOf,12).map(m=>[m,100]))};
+const calc=(q=p,c=cfg,d=data)=>PF.calculateOne(q,d,c);
+test('Incomplete detail does not disable monthly spike defence',()=>{const tx=Array.from({length:8},(_,i)=>({date:'2026-06-'+String(i+1).padStart(2,'0'),qty:1,client:'anon-a',order:String(i)}));assert.equal(calc({...p,transactions:tx}).order,calc({...p,transactions:tx,sales:{...p.sales,'2026-07':10100}}).order);});
+test('Customer orders split into documents are removed',()=>{const tx=Array.from({length:60},(_,i)=>({date:'2026-07-'+String(i%20+1).padStart(2,'0'),qty:1,client:'anon-'+i,order:String(i)}));const r=calc({...p,sales:{...p.sales,'2026-07':10100},transactions:[...tx,...Array.from({length:10},(_,i)=>({date:'2026-07-25',qty:1000,client:'anon-bulk',order:'b'+i}))]});assert.equal(r.order,calc().order);assert.equal(r.excludedQty,10000);});
+test('Partial stockout and zero sales recovers lost demand',()=>{const q={...p,sales:{...p.sales,'2026-08':0}};const r=calc({...q,stockouts:[{start:'2026-08-01',end:'2026-08-15'}]});assert(r.lostQty>0);assert(r.order>calc(q).order);});
+test('Overlapping stockout dates are counted once',()=>{const out={start:'2026-08-01',end:'2026-08-15'};assert.equal(calc({...p,stockouts:[out]}).order,calc({...p,stockouts:[out,out]}).order);});
+test('Current month affects demand when enabled',()=>assert(calc({...p,sales:{...p.sales,'2026-09':220}},{...cfg,currentMonth:true}).order>calc(p,{...cfg,currentMonth:true}).order));
+test('Individual seasonality learned from repeated annual pattern',()=>{const q={...p,sales:{}};for(let y=2023;y<=2026;y++)for(let m=1;m<=12;m++)q.sales[y+'-'+String(m).padStart(2,'0')]=m===10?900:100;const r=calc(q,{...cfg,seasonality:true},{...data,seasonality:null});assert(r.daily.find(d=>d.date==='2026-10-01').qty>r.daily.find(d=>d.date==='2026-09-23').qty*3);});
+test('Persistent demand growth raises orders',()=>{const q=structuredClone(p);for(const m of PF.monthsBefore(cfg.asOf,3))q.sales[m]=200;assert(calc(q).order>calc().order);});
+test('Invalid seasonality stops calculation',()=>assert.throws(()=>calc(p,{...cfg,seasonality:true},{...data,seasonality:Array(12).fill(0)}),/Сезонность/));
+test('Invalid calendar dates rejected',()=>{assert.equal(PF.date('2026-99-99'),null);assert.equal(PF.date('2026-02-31'),null);assert.equal(PF.date('2024-02-29'),'2024-02-29');});
+const catalog={file:'catalog.csv',name:'catalog',rows:[['sku','stock','supplier','warehouse'],['A',10,'S','W1'],['A',20,'S','W2']]};
+test('Warehouse balances aggregate independently of row order',()=>{for(const rows of [catalog.rows,[catalog.rows[0],catalog.rows[2],catalog.rows[1]]])assert.equal(Object.values(PF.build([{...catalog,rows}]).products)[0].stock,30);});
+test('Warehouse scope uses only its own stock and sales',()=>{const d=PF.build([catalog,{file:'sales.csv',name:'sales',rows:[['sku','date','qty','warehouse'],['A','2026-08-01',100,'W1'],['A','2026-08-01',200,'W2']]}]);const a=PF.calculate(d,{...cfg,warehouse:'W1'})[0],b=PF.calculate(d,{...cfg,warehouse:'W2'})[0];assert.equal(a.stock,10);assert.equal(b.stock,20);assert(b.demand>a.demand);});
+test('Missing warehouse data blocks recommendations',()=>assert.equal(calc({...p,warehouses:{}},{...cfg,warehouse:'Unknown'}).order,null));
+test('Duplicate renamed sheet skipped',()=>{const d=PF.build([catalog,{...catalog,file:'copy.csv'}]);assert.equal(d.files.length,1);assert(d.warnings.some(w=>w.includes('Повторный')));});
+test('Overlapping deliveries deduplicated by document',()=>{const t={file:'transit.csv',name:'transit',rows:[['sku','qty','eta','order_id'],['A',20,'2026-09-28','D1']]};const extra={...t,file:'copy.csv',rows:[...t.rows,['A',5,'2026-09-29','D2']]};const d=PF.build([catalog,t,extra]);assert.equal(Object.values(d.products)[0].transit.reduce((a,t)=>a+t.qty,0),25);});
+test('Different documents at same date remain separate',()=>{const q={...p,transit:[{qty:20,eta:'2026-09-28',order:'A'},{qty:20,eta:'2026-09-28',order:'B'}]};assert.equal(calc(q).transit,40);});
+test('Contradictory balances require correction',()=>{const d=PF.build([{...catalog,rows:[catalog.rows[0],['A',10,'S','W1'],['A',20,'S','W1']]}]);assert.equal(Object.values(d.products)[0].stock,null);});
+test('IEK stock report with unit header recognized',()=>assert.equal(PF.classify({file:'x',name:'x',rows:[['Номенклатура','Ед.','Код','янв. 2024','февр. 2024','март 2024']]}).kind,'monthly-stock'));
+test('IEK wide incoming document dates do not become sales',()=>{const d=PF.build([{file:'IEK',name:'x',rows:[['Код 1с','Артикул ИЭК','Наименование','УТ-8231 (поступление до 30.09.2026)'],['001','A','test',20]]}]);const q=Object.values(d.products)[0];assert.equal(q.transit[0].eta,'2026-09-30');assert.equal(q.transit[0].qty,20);assert.equal(Object.keys(q.sales).length,0);});
+test('IEK minimum shipping quantity imported as MOQ',()=>{const d=PF.build([{file:'IEK',name:'x',rows:[['Код 1с','Артикул поставщика','Наименование','Мин. разр. к отгр.'],['001','A','test',12]]}]);assert.equal(Object.values(d.products)[0].minQty,12);});
+test('Unanonymized client value rejected by calculation import',()=>assert.throws(()=>PF.build([{file:'x',name:'x',rows:[['sku','date','qty','client_id'],['A','2026-08-01',10,'PERSON NAME']]}]),/обезличены/));
+test('Supplier lead-time overrides default',()=>assert(calc(p,{...cfg,suppliers:{[p.supplier]:{lead:60}}}).demand===calc().demand)); // Explicit SKU lead has priority.
+test('Supplier lead-time applies without SKU override',()=>assert(calc({...p,leadDays:null},{...cfg,suppliers:{[p.supplier]:{lead:60}}}).demand>calc({...p,leadDays:null}).demand));
+test('Every recommendation explains the numeric result',()=>{for(const r of PF.calculate(data,cfg))assert(r.why.length>50);});
+test('Project does not persist original sheets or active approval',()=>{const state={data,cfg,sheets:[{file:'secret',name:'secret',rows:[['PRIVATE']]}],errors:[],edits:{},approved:new Set(['S']),lastCalc:new Date(),audit:[]};const decoded=Project.decode(Project.encode(state));assert.deepEqual(decoded.sheets,[]);assert.deepEqual(decoded.approved,[]);});
+console.log(count+' acceptance tests passed');
+
